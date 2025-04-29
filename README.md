@@ -1,4 +1,4 @@
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.14720426.svg)](https://doi.org/10.5281/zenodo.14720426)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15305319.svg)](https://doi.org/10.5281/zenodo.15305319)
 
 # lafferty-etal-2025-earthsfuture
 
@@ -22,7 +22,7 @@ Physical hazards pose risks to many critical systems. Designing adaptive measure
 Lafferty et al. (2025), Combined meteorological and hydrologic uncertainties shape projections of future soil moisture in the eastern United States, ESS Open Archive. https://doi.org/10.22541/essoar.173878030.00737104/v1
 
 ## Code reference
-David Lafferty. (2025). david0811/lafferty-etal-2025-earthsfuture: Initial submission (v1.0). Zenodo. https://doi.org/10.5281/zenodo.14720426
+David Lafferty. (2025). david0811/lafferty-etal-2025-earthsfuture: First revision (v1.1). Zenodo. [https://doi.org/10.5281/zenodo.14720426](https://doi.org/10.5281/zenodo.15305319)
 
 ## Data reference
 
