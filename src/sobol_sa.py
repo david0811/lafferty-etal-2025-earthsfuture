@@ -4,6 +4,7 @@ import jax.numpy as jnp
 import numpy as np
 import pandas as pd
 from SALib import ProblemSpec
+from scipy.stats import gaussian_kde, rankdata
 from utils.global_paths import project_data_path
 
 from water_balance_jax import (
@@ -12,6 +13,58 @@ from water_balance_jax import (
     wbm_jax,
 )
 
+def calculate_delta_full(Y, X):
+    """Calculate delta sensitivity indices using the full dataset without random sampling.
+    For original implementation, see: https://salib.readthedocs.io/en/latest/_modules/SALib/analyze/delta.html
+    
+    Parameters:
+    -----------
+    Y : numpy.ndarray
+        Model outputs, shape (N,)
+    X : numpy.ndarray
+        Model inputs, shape (N, D) where D is number of parameters
+        
+    Returns:
+    --------
+    delta : numpy.ndarray
+        Delta sensitivity indices for each parameter
+    """
+    N = len(Y)
+    D = X.shape[1]
+    delta = np.zeros(D)
+    
+    # Create grid for PDF estimation
+    Ygrid = np.linspace(np.min(Y), np.max(Y), 100)
+    
+    # Estimate the unconditional PDF
+    fy = gaussian_kde(Y, bw_method="silverman")(Ygrid)
+    
+    # Equal frequency partition calculation (similar to original code)
+    exp = 2.0 / (7.0 + np.tanh((1500.0 - N) / 500.0))
+    M = int(np.round(min(int(np.ceil(N**exp)), 48)))
+    m = np.linspace(0, N, M + 1)
+    
+    for i in range(D):
+        X_i = X[:, i]
+        xr = rankdata(X_i, method="ordinal")
+        
+        d_hat = 0.0
+        for j in range(len(m) - 1):
+            ix = np.where((xr > m[j]) & (xr <= m[j + 1]))[0]
+            nm = len(ix)
+            
+            Y_ix = Y[ix]
+            if np.ptp(Y_ix) != 0.0:
+                fyc = gaussian_kde(Y_ix, bw_method="silverman")(Ygrid)
+                fy_ = np.abs(fy - fyc)
+            else:
+                fy_ = np.abs(fy)
+            
+            d_hat += (nm / (2 * N)) * np.trapezoid(fy_, Ygrid)
+        
+        delta[i] = d_hat
+    
+    return delta
 
 def wbm_sobol(
     ix,
@@ -28,7 +81,7 @@ def wbm_sobol(
 ):
     """
     Perform a single gridpoint Sobol SA using parameter file in `experiment_name`.
-        - ix, iy assuming CONUS (whole domain)
+        - ix, iy assuming eCONUS (whole domain)
         - Metrics include mean, SD, range, and RMSE against obs if `eval` = NLDAS, SMAP
         - CC can be imposed by `tas_delta` and `prcp_factor`
     """
@@ -38,11 +91,11 @@ def wbm_sobol(
     # Read data
     if forcing == "SMAP":
         forcing_data = np.load(
-            f"{project_data_path}/WBM/calibration/CONUS/{forcing}/inputs.npz"
+            f"{project_data_path}/WBM/calibration/eCONUS/{forcing}/inputs.npz"
         )
     else:
         forcing_data = np.load(
-            f"{project_data_path}/WBM/calibration/CONUS/VIC/inputs.npz"
+            f"{project_data_path}/WBM/calibration/eCONUS/VIC/inputs.npz"
         )  # identical for SA purposes
 
     # Select gridpoint
@@ -56,7 +109,7 @@ def wbm_sobol(
     ###################
     if eval == "SMAP":
         obs = np.load(
-            f"{project_data_path}/WBM/calibration/CONUS/{forcing}/{forcing}_validation.npy"
+            f"{project_data_path}/WBM/calibration/eCONUS/{forcing}/{forcing}_validation.npy"
         )
         obs = obs[ix, iy, :]
         obs_centered = obs - jnp.mean(obs)
@@ -64,7 +117,7 @@ def wbm_sobol(
         obs_list = ["VIC", "NOAH", "MOSAIC"]
         obs = [
             np.load(
-                f"{project_data_path}/WBM/calibration/CONUS/{obs}/{obs}_validation.npy"
+                f"{project_data_path}/WBM/calibration/eCONUS/{obs}/{obs}_validation.npy"
             )
             for obs in obs_list
         ]
