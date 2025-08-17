@@ -11,7 +11,7 @@
 <sup>3 </sup>Department of Agricultural Economics, Purdue University\
 <sup>3 </sup>Thayer School of Engineering, Dartmouth College
 
-\* corresponding author:  `dcl257@cornell.edu`\
+\* corresponding author:  `davidcl2@illinois.edu`\
 <sup>a </sup> Current address: Department of Biological & Environmental Engineering, Cornell University\
 <sup>b </sup> Current address: National Oceanic & Atmospheric Administration
 
